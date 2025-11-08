@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   mysql:
     image: mysql:8.0
@@ -8,7 +9,7 @@ services:
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - voting_mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
@@ -17,6 +18,9 @@ services:
     container_name: voting-redis
     ports:
       - "${REDIS_EXTERNAL_PORT}:6379"
+    volumes:
+      - voting_redis_data:/data
+    command: redis-server --appendonly yes
     restart: unless-stopped
 
   backend:
@@ -32,6 +36,8 @@ services:
       REDIS_PORT: ${REDIS_PORT}
     ports:
       - "${PORT}:${PORT}"
+    volumes:
+      - voting_backend_logs:/app/logs
     depends_on:
       - mysql
       - redis
@@ -42,9 +48,14 @@ services:
     container_name: voting-frontend
     ports:
       - "${FRONTEND_PORT}:3000"
+    volumes:
+      - voting_frontend_logs:/app/logs
     depends_on:
       - backend
     restart: unless-stopped
 
 volumes:
-  mysql_data:
+  voting_mysql_data: 
+  voting_redis_data:
+  voting_backend_logs: 
+  voting_frontend_logs:
